@@ -1,91 +1,81 @@
-#include <stdio.h>
 #include <iostream>
+#include <fstream>
+#include <sstream>
+#include <string>
+#include <map>
+#include <vector>
 #include <chrono>
-#include "dbscan.h"
+#include "graphdbscan.h"
 
-#define MINIMUM_POINTS 4     // minimum number of cluster
-#define EPSILON (0.75*0.75)  // distance for clustering, metre^2
-
-void readBenchmarkData(vector<Point>& points, const char* file_name)
-{
-    // load point cloud
-    FILE *stream;
-    stream = fopen (file_name,"ra");
-
-    unsigned int minpts, num_points, cluster, i = 0;
-    double epsilon;
-    fscanf(stream, "%u\n", &num_points);
-
-    Point *p = (Point *)calloc(num_points, sizeof(Point));
-
-    while (i < num_points)
-    {
-          fscanf(stream, "%f,%f,%f,%d\n", &(p[i].x), &(p[i].y), &(p[i].z), &cluster);
-          p[i].clusterID = UNCLASSIFIED;
-          points.push_back(p[i]);
-          ++i;
-    }
-
-    free(p);
-    fclose(stream);
-}
-
-void printResults(vector<Point>& points, int num_points)
-{
-    int i = 0;
-    printf("Number of points: %u\n"
-        " x     y     z     cluster_id\n"
-        "-----------------------------\n"
-        , num_points);
-    while (i < num_points)
-    {
-          printf("%5.2lf %5.2lf %5.2lf: %d\n",
-                 points[i].x,
-                 points[i].y, points[i].z,
-                 points[i].clusterID);
-          ++i;
+// Function to read a graph from an edge list file
+void readGraphData(std::map<int, std::vector<int>>& adj, std::map<int, Node>& nodes, const char* file_name) {
+    std::ifstream infile(file_name);
+    std::string line;
+    while (std::getline(infile, line)) {
+        if (line.empty() || line[0] == '#') continue;
+        std::istringstream iss(line);
+        int u, v;
+        if (!(iss >> u >> v)) continue;
+        adj[u].push_back(v);
+        adj[v].push_back(u); // undirected
+        nodes.emplace(u, Node(u));
+        nodes.emplace(v, Node(v));
     }
 }
 
-int main()
-{    
-    vector<Point> points;
+// Function to print clustering results
+void printResults(const std::map<int, Node>& nodes) {
+    std::cout << "NodeID\tClusterID\n";
+    for (const auto& kv : nodes) {
+        std::cout << kv.first << "\t" << kv.second.clusterID << "\n";
+    }
+}
 
-    // read point data
-    readBenchmarkData(points, "benchmark_hepta.dat");
+int main() {
+    // Parameters for DBSCAN
+    int minPts = 4;
+    int eps = 2;
 
-    // constructor
+    // 1. Cluster first dataset
+    std::map<int, std::vector<int>> adj1;
+    std::map<int, Node> nodes1;
+    readGraphData(adj1, nodes1, "roadNet-PA.txt");
     auto full_start = std::chrono::steady_clock::now();
-    DBSCAN ds(MINIMUM_POINTS, EPSILON, points);
-    // main loop
-    ds.run();
-    // result of DBSCAN algorithm
-    printf("Full cluster\nqty: %d\n", ds.getClusterQuantity());
+    GraphDBSCAN ds1(minPts, eps, adj1);
+    ds1.nodes = nodes1;
+    ds1.run();
     auto full_end = std::chrono::steady_clock::now();
-    printResults(ds.m_points, ds.getTotalPointSize());    
-    printf("\n\n");
+    std::cout << "Full cluster\nqty: " << ds1.getClusterCount() << "\n";
+    printResults(ds1.nodes);
+    std::cout << "\n\n";
 
-    vector<Point> u_points;
-    readBenchmarkData(u_points, "benchmark_hepta_uh.dat");
+    // 2. Cluster second dataset
+    std::map<int, std::vector<int>> adj2;
+    std::map<int, Node> nodes2;
+    readGraphData(adj2, nodes2, "roadNet-PA_lh.txt");
     auto half_start = std::chrono::steady_clock::now();
-    DBSCAN u_ds(MINIMUM_POINTS, EPSILON, u_points);
-    u_ds.run();
+    GraphDBSCAN ds2(minPts, eps, adj2);
+    ds2.nodes = nodes2;
+    ds2.run();
     auto half_end = std::chrono::steady_clock::now();
-    printf("Half init cluster\nqty: %d\n", u_ds.getClusterQuantity());
-    printResults(u_ds.m_points, u_ds.getTotalPointSize());  
-    printf("\n\n");
+    std::cout << "Half cluster\nqty: " << ds2.getClusterCount() << "\n";
+    printResults(ds2.nodes);
+    std::cout << "\n\n";
 
-    vector<Point> l_points;
-    readBenchmarkData(l_points, "benchmark_hepta_lh.dat");
+    // 3. Incrementally add nodes from a third dataset to the first clustering
+    std::map<int, std::vector<int>> adj3;
+    std::map<int, Node> nodes3;
+    readGraphData(adj3, nodes3, "roadNet-PA_uh.txt");
     auto add_start = std::chrono::steady_clock::now();
-    for(vector<Point>::iterator iter = l_points.begin(); iter != l_points.end(); iter++){
-        u_ds.addPoint(*iter);
+    for (const auto& kv : nodes3) {
+        ds2.addPoint(kv.first); // Add new node by ID
+        // std::cout << "After adding node " << kv.first << ":\n";
+        // printResults(ds2.nodes);
     }
     auto add_end = std::chrono::steady_clock::now();
 
-    // result of DBSCAN algorithm
-    printf("Cluster with additional points\nqty: %d\n", ds.getClusterQuantity());
-    printResults(u_ds.m_points, u_ds.getTotalPointSize());
+    std::cout << "Cluster with additional points\nqty: " << ds1.getClusterCount() << "\n";
+    printResults(ds2.nodes);
 
     auto full_elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(full_end - full_start);
     auto half_elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(half_end - half_start);
