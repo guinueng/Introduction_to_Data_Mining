@@ -5,11 +5,11 @@
 #define MINIMUM_POINTS 4     // minimum number of cluster
 #define EPSILON (0.75*0.75)  // distance for clustering, metre^2
 
-void readBenchmarkData(vector<Point>& points)
+void readBenchmarkData(vector<Point>& points, const char* file_name)
 {
     // load point cloud
     FILE *stream;
-    stream = fopen ("benchmark_hepta.dat","ra");
+    stream = fopen (file_name,"ra");
 
     unsigned int minpts, num_points, cluster, i = 0;
     double epsilon;
@@ -51,7 +51,7 @@ int main()
     vector<Point> points;
 
     // read point data
-    readBenchmarkData(points);
+    readBenchmarkData(points, "benchmark_hepta.dat");
 
     // constructor
     DBSCAN ds(MINIMUM_POINTS, EPSILON, points);
@@ -60,7 +60,30 @@ int main()
     ds.run();
 
     // result of DBSCAN algorithm
+    printf("1\ncluster qty: %d\n", ds.getClusterQuantity());
     printResults(ds.m_points, ds.getTotalPointSize());    
+    printf("\n\n\n");
+
+    vector<Point> u_points;
+    readBenchmarkData(u_points, "benchmark_hepta_uh.dat");
+    DBSCAN u_ds(MINIMUM_POINTS, EPSILON, u_points);
+    printf("2\ncluster qty: %d\n", u_ds.getClusterQuantity());
+    printResults(u_ds.m_points, u_ds.getTotalPointSize());  
+    printf("\n\n\n");
+
+    vector<Point> l_points;
+    readBenchmarkData(l_points, "benchmark_hepta_lh.dat");
+    printf("4\n");
+    for(vector<Point>::iterator iter = l_points.begin(); iter != l_points.end(); iter++){
+        printf("5\n");
+        u_ds.addPoint(*iter);
+        printf("middle result:\n");
+        printResults(u_ds.m_points, u_ds.getTotalPointSize());  
+    }
+
+    // result of DBSCAN algorithm
+    printf("3\ncluster qty: %d\n", ds.getClusterQuantity());
+    printResults(u_ds.m_points, u_ds.getTotalPointSize());  
 
     return 0;
 }
