@@ -2,11 +2,7 @@
 #define DBSCAN_H
 
 #include <vector>
-#include <cmath>
-#include <climits>
 #include <algorithm>
-#include <cstring>
-#include <iostream>
 #include <set>
 #include <map>
 

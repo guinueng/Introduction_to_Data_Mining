@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <iostream>
+#include <chrono>
 #include "dbscan.h"
 
 #define MINIMUM_POINTS 4     // minimum number of cluster
@@ -54,33 +55,44 @@ int main()
     readBenchmarkData(points, "benchmark_hepta.dat");
 
     // constructor
+    auto full_start = std::chrono::steady_clock::now();
     DBSCAN ds(MINIMUM_POINTS, EPSILON, points);
-
     // main loop
     ds.run();
-
     // result of DBSCAN algorithm
-    printf("1\ncluster qty: %d\n", ds.getClusterQuantity());
+    printf("Full cluster\nqty: %d\n", ds.getClusterQuantity());
+    auto full_end = std::chrono::steady_clock::now();
     printResults(ds.m_points, ds.getTotalPointSize());    
-    printf("\n\n\n");
+    printf("\n\n");
 
     vector<Point> u_points;
     readBenchmarkData(u_points, "benchmark_hepta_uh.dat");
+    auto half_start = std::chrono::steady_clock::now();
     DBSCAN u_ds(MINIMUM_POINTS, EPSILON, u_points);
     u_ds.run();
-    printf("2\ncluster qty: %d\n", u_ds.getClusterQuantity());
+    auto half_end = std::chrono::steady_clock::now();
+    printf("Half init cluster\nqty: %d\n", u_ds.getClusterQuantity());
     printResults(u_ds.m_points, u_ds.getTotalPointSize());  
-    printf("\n\n\n");
+    printf("\n\n");
 
     vector<Point> l_points;
     readBenchmarkData(l_points, "benchmark_hepta_lh.dat");
+    auto add_start = std::chrono::steady_clock::now();
     for(vector<Point>::iterator iter = l_points.begin(); iter != l_points.end(); iter++){
         u_ds.addPoint(*iter);
     }
+    auto add_end = std::chrono::steady_clock::now();
 
     // result of DBSCAN algorithm
-    printf("3\ncluster qty: %d\n", ds.getClusterQuantity());
-    printResults(u_ds.m_points, u_ds.getTotalPointSize());  
+    printf("Cluster with additional points\nqty: %d\n", ds.getClusterQuantity());
+    printResults(u_ds.m_points, u_ds.getTotalPointSize());
+
+    auto full_elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(full_end - full_start);
+    auto half_elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(half_end - half_start);
+    auto add_elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(add_end - add_start);
+    std::cout << "Full DBSCAN elapsed time: " << full_elapsed.count() << " ms" << std::endl;
+    std::cout << "Half DBSCAN elapsed time: " << half_elapsed.count() << " ms" << std::endl;
+    std::cout << "Add DBSCAN elapsed time: " << add_elapsed.count() << " ms" << std::endl;
 
     return 0;
 }
