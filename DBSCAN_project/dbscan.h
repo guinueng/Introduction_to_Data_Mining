@@ -7,6 +7,8 @@
 #include <algorithm>
 #include <cstring>
 #include <iostream>
+#include <set>
+#include <map>
 
 #define UNCLASSIFIED -1
 #define CORE_POINT 1
@@ -39,7 +41,7 @@ public:
     int expandCluster(Point point, int clusterID);
     inline double calculateDistance(const Point& pointCore, const Point& pointTarget);
     int addPoint(Point& point);
-    int updateClusterID(vector<int>& mod_idx, int target_idx);
+    int updateClusterID(const vector<int>& mod_idx, int target_idx);
 
     int getTotalPointSize() {return m_pointSize;}
     int getMinimumClusterSize() {return m_minPoints;}

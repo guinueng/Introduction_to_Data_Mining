@@ -91,99 +91,57 @@ inline double DBSCAN::calculateDistance(const Point& pointCore, const Point& poi
 }
 
 
-int DBSCAN::addPoint(Point& point){
+int DBSCAN::addPoint(Point& point) {
     m_points.push_back(point);
-    printf("1\n");
-    vector<int> clusterSeeds = calculateCluster(point);
-    printf("size: %d\n", clusterSeeds.size());
-
-    if ( clusterSeeds.size() < m_minPoints ){
-        printf("2\n");
-        point.clusterID = NOISE;
-        return FAILURE;
-    }
-    else{
-        printf("3\n");
-        int index = 0, indexCorePoint = 0;
-        vector<int>::iterator iterSeeds;
-        vector<int> candidates;
-        for(iterSeeds = clusterSeeds.begin(); iterSeeds != clusterSeeds.end(); ++iterSeeds){
-            if(m_points.at(*iterSeeds).clusterID != UNCLASSIFIED && m_points.at(*iterSeeds).clusterID != NOISE){
-                candidates.push_back(m_points.at(*iterSeeds).clusterID);
-            }
-        }
-        printf("candidates: ");
-        for(size_t i = 0; i < candidates.size(); i++){
-            printf("%d ", candidates[i]);
-        }
-        printf("\n\n4\n");
-        if(candidates.size() == 0){ // New cluster happened.
-            printf("5\n");
-            m_clusterQuantity++;
-            for(iterSeeds = clusterSeeds.begin(); iterSeeds != clusterSeeds.end(); ++iterSeeds){
-                m_points.at(*iterSeeds).clusterID = m_clusterQuantity;
-            }
-        }
-        else{
-            printf("6\n");
-            vector<int>::iterator iter;
-            vector<int>::iterator min_iter = candidates.begin();
-            for(iter = candidates.begin(); iter != candidates.end(); iter++){
-                if(*min_iter > *iter){
-                    min_iter = iter;
-                }
-            }
-            printf("8\n");
-            int min_idx = *min_iter;
-            candidates.erase(min_iter);
-            printf("7\n");
-
-            for(iterSeeds = clusterSeeds.begin(); iterSeeds != clusterSeeds.end(); ++iterSeeds){
-                m_points.at(*iterSeeds).clusterID = min_idx;
-            }
-            printf("9\n");
-
-            if(candidates.size() != 0){
-                printf("11\n");
-                updateClusterID(candidates, min_idx);
-            }
-            printf("10\n");
-
-        }
-    }
     m_pointSize++;
 
-    return SUCCESS;
+    vector<int> clusterSeeds = calculateCluster(point);
+    if (clusterSeeds.size() < m_minPoints) {
+        m_points.back().clusterID = NOISE;
+        return FAILURE;
+    } else {
+        set<int> candidates;
+        for (auto idx : clusterSeeds) {
+            int cid = m_points.at(idx).clusterID;
+            if (cid != UNCLASSIFIED && cid != NOISE) {
+                candidates.insert(cid);
+            }
+        }
+        if (candidates.empty()) {
+            // New cluster
+            m_clusterQuantity++;
+            for (auto idx : clusterSeeds) {
+                m_points.at(idx).clusterID = m_clusterQuantity;
+            }
+        } else {
+            int min_idx = *candidates.begin();
+            for (auto idx : clusterSeeds) {
+                m_points.at(idx).clusterID = min_idx;
+            }
+            candidates.erase(min_idx);
+            if (!candidates.empty()) {
+                // Merge clusters
+                std::vector<int> merge_ids(candidates.begin(), candidates.end());
+                updateClusterID(merge_ids, min_idx);
+            }
+        }
+        return SUCCESS;
+    }
 }
 
-int DBSCAN::updateClusterID(vector<int>& mod_idx, int target_idx){
-    vector<Point>::iterator iterPoints;
-    int new_idx[m_clusterQuantity];
-    printf("m_clusterQuantity: %d\ntarget_idx: %d\nmod idx: ", m_clusterQuantity, target_idx);
-    for(size_t i = 0; i < mod_idx.size(); i++){
-        printf("%d ", mod_idx[i]);
-    }
-    printf("\n\n11\n");
-    for(vector<int>::iterator iter = mod_idx.begin(); iter != mod_idx.end(); iter++){
-        new_idx[*iter - 1] = target_idx;
-    }
-    printf("12\n");
-    int max = target_idx + 1;
-    for(int i = 0; i < m_clusterQuantity; i++){
-        if(i < target_idx - 1){
-            new_idx[i] = i + 1;
-        }
-        if(new_idx[i] == 0){
-            new_idx[i] = max;
-            max++;
+int DBSCAN::updateClusterID(const vector<int>& mod_idx, int target_idx) {
+    map<int, int> cluster_map;
+    for (auto cid : mod_idx) {
+        if (cid > 0 && cid <= (int)m_clusterQuantity) {
+            cluster_map[cid] = target_idx;
         }
     }
-
-    for(iterPoints = m_points.begin(); iterPoints != m_points.end(); iterPoints++){
-        if(iterPoints -> clusterID >= 1 && iterPoints -> clusterID != new_idx[iterPoints -> clusterID - 1]){
-            iterPoints -> clusterID = new_idx[iterPoints -> clusterID - 1];
+    for (auto& pt : m_points) {
+        auto it = cluster_map.find(pt.clusterID);
+        if (it != cluster_map.end()) {
+            pt.clusterID = it->second;
         }
     }
-
+    // Optionally, update m_clusterQuantity if clusters are merged
     return SUCCESS;
 }

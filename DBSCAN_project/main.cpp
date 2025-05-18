@@ -67,18 +67,15 @@ int main()
     vector<Point> u_points;
     readBenchmarkData(u_points, "benchmark_hepta_uh.dat");
     DBSCAN u_ds(MINIMUM_POINTS, EPSILON, u_points);
+    u_ds.run();
     printf("2\ncluster qty: %d\n", u_ds.getClusterQuantity());
     printResults(u_ds.m_points, u_ds.getTotalPointSize());  
     printf("\n\n\n");
 
     vector<Point> l_points;
     readBenchmarkData(l_points, "benchmark_hepta_lh.dat");
-    printf("4\n");
     for(vector<Point>::iterator iter = l_points.begin(); iter != l_points.end(); iter++){
-        printf("5\n");
         u_ds.addPoint(*iter);
-        printf("middle result:\n");
-        printResults(u_ds.m_points, u_ds.getTotalPointSize());  
     }
 
     // result of DBSCAN algorithm
