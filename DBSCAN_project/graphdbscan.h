@@ -36,6 +36,9 @@ public:
 
     int addPoint(int nodeId);
     int updateClusterID(const std::vector<int>& mod_idx, int target_idx);
+    void update_adj(std::map<int, std::vector<int>>& adj){
+        m_adj = adj;
+    }
     
     int getClusterCount() {return m_clusterCount;}
 
