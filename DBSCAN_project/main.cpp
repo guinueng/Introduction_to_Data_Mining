@@ -58,7 +58,7 @@ int main() {
     // 2. Cluster second dataset
     std::map<int, std::vector<int>> adj2;
     std::map<int, Node> nodes2;
-    readGraphData(adj2, nodes2, "./Dataset/p2p-Gnutella08_lh.txt");
+    readGraphData(adj2, nodes2, "./Dataset/p2p-Gnutella08_remove_last_one.txt");
     auto half_start = std::chrono::steady_clock::now();
     GraphDBSCAN ds2(minPts, eps, adj2);
     ds2.nodes = nodes2;
@@ -77,7 +77,7 @@ int main() {
     // 3. Incrementally add nodes from a third dataset to the first clustering
     std::map<int, std::vector<int>> adj3;
     std::map<int, Node> nodes3;
-    readGraphData(adj2, nodes3, "./Dataset/p2p-Gnutella08_uh.txt");
+    readGraphData(adj2, nodes3, "./Dataset/p2p-Gnutella08_last_one.txt");
     ds2.update_adj(adj2);
     auto add_start = std::chrono::steady_clock::now();
     for (const auto& kv : nodes3) {
