@@ -107,6 +107,12 @@ int GraphDBSCAN::updateClusterID(const std::vector<int>& mod_idx, int target_idx
         if (valid_ids.count(kv.second.clusterID))
             kv.second.clusterID = target_idx;
     }
-    // Optionally, update m_clusterCount if clusters are merged
+    // Recompute the number of unique clusters (excluding noise/unclassified)
+    std::set<int> unique_clusters;
+    for (const auto& kv : nodes) {
+        if (kv.second.clusterID > 0)
+            unique_clusters.insert(kv.second.clusterID);
+    }
+    m_clusterCount = unique_clusters.size();
     return SUCCESS;
 }

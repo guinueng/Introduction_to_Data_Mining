@@ -141,7 +141,7 @@ int DBSCAN::addPoint(Point& point) {
 }
 
 int DBSCAN::updateClusterID(const vector<int>& mod_idx, int target_idx) {
-    map<int, int> cluster_map;
+    std::map<int, int> cluster_map;
     for (auto cid : mod_idx) {
         if (cid > 0 && cid <= (int)m_clusterQuantity) {
             cluster_map[cid] = target_idx;
@@ -153,6 +153,13 @@ int DBSCAN::updateClusterID(const vector<int>& mod_idx, int target_idx) {
             pt.clusterID = it->second;
         }
     }
-    // Optionally, update m_clusterQuantity if clusters are merged
+    // Recompute the number of unique clusters
+    std::set<int> unique_clusters;
+    for (const auto& pt : m_points) {
+        if (pt.clusterID > 0) {
+            unique_clusters.insert(pt.clusterID);
+        }
+    }
+    m_clusterQuantity = unique_clusters.size();
     return SUCCESS;
 }

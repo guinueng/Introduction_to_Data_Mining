@@ -16,6 +16,7 @@
 struct Node {
     int id;
     int clusterID;
+    Node() : id(-1), clusterID(UNCLASSIFIED) {} // Default constructor
     Node(int i) : id(i), clusterID(UNCLASSIFIED) {}
 };
 

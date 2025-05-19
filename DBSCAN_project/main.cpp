@@ -33,13 +33,13 @@ void printResults(const std::map<int, Node>& nodes) {
 
 int main() {
     // Parameters for DBSCAN
-    int minPts = 4;
-    int eps = 2;
+    int minPts = 12;
+    int eps = 1;
 
     // 1. Cluster first dataset
     std::map<int, std::vector<int>> adj1;
     std::map<int, Node> nodes1;
-    readGraphData(adj1, nodes1, "roadNet-PA.txt");
+    readGraphData(adj1, nodes1, "./Dataset/p2p-Gnutella08.txt");
     auto full_start = std::chrono::steady_clock::now();
     GraphDBSCAN ds1(minPts, eps, adj1);
     ds1.nodes = nodes1;
@@ -52,7 +52,7 @@ int main() {
     // 2. Cluster second dataset
     std::map<int, std::vector<int>> adj2;
     std::map<int, Node> nodes2;
-    readGraphData(adj2, nodes2, "roadNet-PA_lh.txt");
+    readGraphData(adj2, nodes2, "./Dataset/p2p-Gnutella08_lh.txt");
     auto half_start = std::chrono::steady_clock::now();
     GraphDBSCAN ds2(minPts, eps, adj2);
     ds2.nodes = nodes2;
@@ -65,7 +65,7 @@ int main() {
     // 3. Incrementally add nodes from a third dataset to the first clustering
     std::map<int, std::vector<int>> adj3;
     std::map<int, Node> nodes3;
-    readGraphData(adj3, nodes3, "roadNet-PA_uh.txt");
+    readGraphData(adj3, nodes3, "./Dataset/p2p-Gnutella08_uh.txt");
     auto add_start = std::chrono::steady_clock::now();
     for (const auto& kv : nodes3) {
         ds2.addPoint(kv.first); // Add new node by ID
