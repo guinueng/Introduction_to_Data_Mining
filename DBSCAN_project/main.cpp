@@ -47,7 +47,7 @@ void printResults(const std::map<int, Node>& nodes, std::ostream& os) {
 
 int main() {
     // Parameters for DBSCAN
-    int minPts = 5;
+    int minPts = 7;
     int eps = 1;
 
     // 1. Cluster first dataset
@@ -73,7 +73,7 @@ int main() {
     // 2. Cluster second dataset
     std::map<int, std::vector<int>> adj2;
     std::map<int, Node> nodes2;
-    readDirectedGraphData(adj2, nodes2, "./Dataset/p2p-Gnutella08_uh.txt");
+    readDirectedGraphData(adj2, nodes2, "./Dataset/p2p-Gnutella08_remove_last_vertex.txt");
     // readGraphData(adj2, nodes2, "./Dataset/roadNet-PA_uh.txt");
     auto half_start = std::chrono::steady_clock::now();
     GraphDBSCAN ds2(minPts, eps, adj2);
@@ -93,7 +93,7 @@ int main() {
     // 3. Incrementally add nodes from a third dataset to the first clustering
     std::map<int, std::vector<int>> adj3;
     std::map<int, Node> nodes3;
-    readDirectedGraphData(adj2, nodes3, "./Dataset/p2p-Gnutella08_lh.txt");
+    readDirectedGraphData(adj2, nodes3, "./Dataset/p2p-Gnutella08_last_vertex.txt");
     // readGraphData(adj2, nodes3, "./Dataset/roadNet-PA_lh.txt");
     ds2.update_adj(adj2);
     auto add_start = std::chrono::steady_clock::now();
@@ -102,11 +102,11 @@ int main() {
         // std::cout << "After adding node " << kv.first << ":\n";
         // printResults(ds2.nodes);
         // For every neighborhood update.
-        for (int neighbor : ds2.m_adj[kv.first]) {
-            if (ds2.nodes[neighbor].clusterID == NOISE || ds2.nodes[neighbor].clusterID == UNCLASSIFIED) {
-                ds2.addPoint(neighbor);
-            }
-        }
+        // for (int neighbor : ds2.m_adj[kv.first]) {
+        //     if (ds2.nodes[neighbor].clusterID == NOISE || ds2.nodes[neighbor].clusterID == UNCLASSIFIED) {
+        //         ds2.addPoint(neighbor);
+        //     }
+        // }
     }
     auto add_end = std::chrono::steady_clock::now();
 
