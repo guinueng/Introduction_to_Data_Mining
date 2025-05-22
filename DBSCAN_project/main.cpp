@@ -43,12 +43,14 @@ void printResults(const std::map<int, Node>& nodes, std::ostream& os) {
     for (const auto& kv : nodes) {
         os << kv.first << "\t" << kv.second.clusterID << "\n";
     }
+
+    // os << "\n\n";
 }
 
 int main() {
     // Parameters for DBSCAN
     int minPts = 5;
-    int eps = 1;
+    int eps = 2;
 
     // 1. Cluster first dataset
     std::map<int, std::vector<int>> adj1;
@@ -60,15 +62,16 @@ int main() {
     ds1.nodes = nodes1;
     ds1.run();
     auto full_end = std::chrono::steady_clock::now();
+    // std::ofstream outfile("eps=2_minpts=5_1.txt");
     std::cout << "Full cluster\nqty: " << ds1.getClusterCount() << "\n";
     // Open output file
-    // std::ofstream full_outfile("full_clustering_results.txt");
     // Print to console
     printResults(ds1.nodes, std::cout);
     // Print to file
-    // printResults(ds1.nodes, full_outfile);
+    // printResults(ds1.nodes, outfile);
     // full_outfile.close();
     std::cout << "\n\n";
+    // std::cout << "1\n";
 
     // 2. Cluster second dataset
     std::map<int, std::vector<int>> adj2;
@@ -86,9 +89,10 @@ int main() {
     // Print to console
     printResults(ds2.nodes, std::cout);
     // Print to file
-    // printResults(ds2.nodes, half_outfile);
+    // printResults(ds2.nodes, outfile);
     // half_outfile.close();
     std::cout << "\n\n";
+    // std::cout << "2\n";
 
     // 3. Incrementally add nodes from a third dataset to the first clustering
     std::map<int, std::vector<int>> adj3;
@@ -117,8 +121,7 @@ int main() {
     printResults(ds2.nodes, std::cout);
     // Print to file
     // printResults(ds2.nodes, outfile);
-    // outfile.close();
-    std::cout << "\n\n";
+    // std::cout << "3\n";
 
     auto full_elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(full_end - full_start);
     auto half_elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(half_end - half_start);
@@ -127,6 +130,7 @@ int main() {
     std::cout << "Full DBSCAN elapsed time: " << full_elapsed.count() << " ms" << std::endl;
     std::cout << "Half DBSCAN elapsed time: " << half_elapsed.count() << " ms" << std::endl;
     std::cout << "Add DBSCAN elapsed time: " << add_elapsed.count() << " ms" << std::endl;
+    // outfile.close();
 
     return 0;
 }

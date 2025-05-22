@@ -33,7 +33,9 @@ def run_elf_multiple_times():
         try:
             # 프로세스 시작
             proc = subprocess.Popen(
-                ["/usr/bin/time",
+                ["stdbuf",
+                 "-oL",
+                 "/usr/bin/time",
                 "-v",
                 str(elf_path)],
                 stdout=subprocess.PIPE,
